@@ -20,21 +20,42 @@ export const handleJobs = () => {
   jobsTable = document.getElementById("jobs-table");
   jobsTableHeader = document.getElementById("jobs-table-header");
 
-  jobsDiv.addEventListener("click", (e) => {
+  jobsDiv.addEventListener("click", async (e) => {
     if (inputEnabled && e.target.nodeName === "BUTTON") {
       if (e.target === addJob) {
         showAddEdit(null);
       } else if (e.target === logoff) {
-
-         setToken(null);
+        setToken(null);
         message.textContent = "You have been logged off.";
         jobsTable.replaceChildren([jobsTableHeader]);
-
-
         showLoginRegister();
       } else if (e.target.classList.contains("editButton")) {
         message.textContent = "";
         showAddEdit(e.target.dataset.id);
+      } else if (e.target.classList.contains("deleteButton")) {
+        // Handle delete
+        const jobId = e.target.dataset.id;
+        if (!jobId) return;
+        enableInput(false);
+        try {
+          const response = await fetch(`/api/v1/jobs/${jobId}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+          if (response.status === 200) {
+            message.textContent = "Job deleted.";
+            showJobs();
+          } else {
+            message.textContent = data.msg || "Delete failed.";
+          }
+        } catch (err) {
+          message.textContent = "A communication error occurred.";
+        }
+        enableInput(true);
       }
     }
   });

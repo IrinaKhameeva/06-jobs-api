@@ -24,10 +24,41 @@ export const handleRegister = () => {
   const registerButton = document.getElementById("register-button");
   const registerCancel = document.getElementById("register-cancel");
 
-  registerDiv.addEventListener("click", (e) => {
+  registerDiv.addEventListener("click", async (e) => {
     if (inputEnabled && e.target.nodeName === "BUTTON") {
       if (e.target === registerButton) {
-        showJobs();
+        // Registration logic
+        if (!name.value || !email1.value || !password1.value || !password2.value) {
+          message.textContent = "Please fill in all fields.";
+          return;
+        }
+        if (password1.value !== password2.value) {
+          message.textContent = "Passwords do not match.";
+          return;
+        }
+        enableInput(false);
+        try {
+          const response = await fetch("/api/v1/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: name.value,
+              email: email1.value,
+              password: password1.value,
+            }),
+          });
+          const data = await response.json();
+          if (response.status === 201) {
+            setToken(data.token);
+            message.textContent = "Registration successful!";
+            showJobs();
+          } else {
+            message.textContent = data.msg || "Registration failed.";
+          }
+        } catch (err) {
+          message.textContent = "A communication error occurred.";
+        }
+        enableInput(true);
       } else if (e.target === registerCancel) {
         showLoginRegister();
       }
